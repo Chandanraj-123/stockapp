@@ -1,0 +1,92 @@
+ the Stock Market Dashboard – Web App Tech Stack described in the diagram you uploaded, written out in text form:
+
+📊 Data Layer
+TradingView Screener 3.2.0
+
+Provides NSE/BSE live quotes, OHLCV data, 52‑week high/low, volume, and screener fields.
+
+⚙️ API Layer
+FastAPI + Uvicorn (async Python backend)
+
+REST API endpoints
+
+WebSocket /ws/quotes for live updates
+
+Watchlist CRUD operations
+
+Alert / GTT endpoints
+
+Authentication via JWT
+
+🔄 Core Services
+Market Data Poller
+
+APScheduler every 3 seconds
+
+Pushes updates to Redis pub/sub
+
+Calculation Engine
+
+Pandas / NumPy
+
+Computes 1D–5Y changes, YoY, and color flags
+
+Market Calendar
+
+pandas-market-calendars
+
+Handles holidays and open/close status
+
+⚡ Cache Layer
+Redis 7
+
+Quote cache + pub/sub broker
+
+Stores latest snapshot per symbol
+
+Channels subscribed by FastAPI WebSocket workers
+
+🛠 Background Tasks
+Celery + Celery Beat
+
+Historical price fetch
+
+GTT order checks
+
+Alert evaluation
+
+Market‑open notifications
+
+🎨 Frontend
+Next.js 14 + React + TypeScript
+
+Main dashboard with sortable AG Grid
+
+Watchlist tabs, search + filters
+
+Stock detail modal (resizable)
+
+Lightweight Charts (TradingView)
+
+Real‑time candlestick/line chart
+
+WebSocket price feed via useEffect
+
+Zustand store for global state management
+
+🗄️ Storage Layer
+PostgreSQL + SQLAlchemy
+
+Stores watchlists, alerts, GTT orders
+
+User preferences and OHLCV history
+
+Alembic Migrations
+
+Schema versioning and rollback support
+
+Notification Service
+
+Manages user alerts and notifications
+
+✅ This stack is designed for real‑time performance (FastAPI + Redis + WebSockets), robust analytics (Pandas/NumPy + PostgreSQL), and a modern frontend (React/Next.js + TradingView charts).
