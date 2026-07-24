@@ -1,0 +1,631 @@
+version: '3.8'
+
+# Stock Market Dashboard - Enterprise Microservices Platform
+# Docker Compose Configuration
+
+services:
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: api-gateway
+    hostname: api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - SERVICE_NAME=api-gateway
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8000
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - ENABLE_WEBSOCKET=true
+      - ENABLE_CACHE=true
+      - ENABLE_CORS=true
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8080
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - stockapp-network
+    depends_on:
+      - auth-service
+      - user-service
+      - market-data-service
+      - watchlist-service
+      - screener-service
+      - trading-service
+      - alert-service
+      - portfolio-service
+      - notification-service
+      - news-service
+      - reporting-service
+      - admin-dashboard
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Authentication Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    container_name: auth-service
+    hostname: auth-service
+    ports:
+      - "8001:8001"
+    environment:
+      - SERVICE_NAME=auth-service
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8001
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - JWT_SECRET_KEY=change-me-in-production
+      - JWT_ALGORITHM=HS256
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - stockapp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # User Service
+  user-service:
+    build:
+      context: .
+      dockerfile: services/user-service/Dockerfile
+    container_name: user-service
+    hostname: user-service
+    ports:
+      - "8002:8002"
+    environment:
+      - SERVICE_NAME=user-service
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8002
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=stockapp
+      - DB_SCHEMA=users
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - stockapp-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Market Data Service
+  market-data-service:
+    build:
+      context: .
+      dockerfile: services/market-data-service/Dockerfile
+    container_name: market-data-service
+    hostname: market-data-service
+    ports:
+      - "8003:8003"
+    environment:
+      - SERVICE_NAME=market-data-service
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8003
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - TRADINGVIEW_SCREENER_VERSION=3.2.0
+      - TRADINGVIEW_POLL_INTERVAL=3
+      - ENABLE_WEBSOCKET=true
+      - ENABLE_CACHE=true
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - stockapp-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Watchlist Service
+  watchlist-service:
+    build:
+      context: .
+      dockerfile: services/watchlist-service/Dockerfile
+    container_name: watchlist-service
+    hostname: watchlist-service
+    ports:
+      - "8004:8004"
+    environment:
+      - SERVICE_NAME=watchlist-service
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8004
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=stockapp
+      - DB_SCHEMA=watchlists
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - stockapp-network
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Screener Service
+  screener-service:
+    build:
+      context: .
+      dockerfile: services/screener-service/Dockerfile
+    container_name: screener-service
+    hostname: screener-service
+    ports:
+      - "8005:8005"
+    environment:
+      - SERVICE_NAME=screener-service
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8005
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - stockapp-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Portfolio Service
+  portfolio-service:
+    build:
+      context: .
+      dockerfile: services/portfolio-service/Dockerfile
+    container_name: portfolio-service
+    hostname: portfolio-service
+    ports:
+      - "8006:8006"
+    environment:
+      - SERVICE_NAME=portfolio-service
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8006
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=stockapp
+      - DB_SCHEMA=portfolio
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - stockapp-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Trading Service
+  trading-service:
+    build:
+      context: .
+      dockerfile: services/trading-service/Dockerfile
+    container_name: trading-service
+    hostname: trading-service
+    ports:
+      - "8007:8007"
+    environment:
+      - SERVICE_NAME=trading-service
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8007
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=stockapp
+      - DB_SCHEMA=trading
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - stockapp-network
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Alert Service
+  alert-service:
+    build:
+      context: .
+      dockerfile: services/alert-service/Dockerfile
+    container_name: alert-service
+    hostname: alert-service
+    ports:
+      - "8008:8008"
+    environment:
+      - SERVICE_NAME=alert-service
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8008
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=stockapp
+      - DB_SCHEMA=alerts
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - stockapp-network
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Notification Service
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    container_name: notification-service
+    hostname: notification-service
+    ports:
+      - "8009:8009"
+    environment:
+      - SERVICE_NAME=notification-service
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8009
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=stockapp
+      - DB_SCHEMA=notifications
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - stockapp-network
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # News Service
+  news-service:
+    build:
+      context: .
+      dockerfile: services/news-service/Dockerfile
+    container_name: news-service
+    hostname: news-service
+    ports:
+      - "8010:8010"
+    environment:
+      - SERVICE_NAME=news-service
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8010
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - stockapp-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Scheduler Service
+  scheduler-service:
+    build:
+      context: .
+      dockerfile: services/scheduler-service/Dockerfile
+    container_name: scheduler-service
+    hostname: scheduler-service
+    ports:
+      - "8011:8011"
+    environment:
+      - SERVICE_NAME=scheduler-service
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8011
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - stockapp-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8011/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Reporting Service
+  reporting-service:
+    build:
+      context: .
+      dockerfile: services/reporting-service/Dockerfile
+    container_name: reporting-service
+    hostname: reporting-service
+    ports:
+      - "8012:8012"
+    environment:
+      - SERVICE_NAME=reporting-service
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8012
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=stockapp
+      - DB_SCHEMA=reports
+    volumes:
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+    networks:
+      - stockapp-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8012/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # AI Service
+  ai-service:
+    build:
+      context: .
+      dockerfile: services/ai-service/Dockerfile
+    container_name: ai-service
+    hostname: ai-service
+    ports:
+      - "8013:8013"
+    environment:
+      - SERVICE_NAME=ai-service
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8013
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - stockapp-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8013/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Admin Dashboard
+  admin-dashboard:
+    build:
+      context: .
+      dockerfile: services/admin-dashboard/Dockerfile
+    container_name: admin-dashboard
+    hostname: admin-dashboard
+    ports:
+      - "8014:8014"
+    environment:
+      - SERVICE_NAME=admin-dashboard
+      - SERVICE_HOST=0.0.0.0
+      - SERVICE_PORT=8014
+      - SERVICE_DEBUG=false
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE=stockapp
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - stockapp-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8014/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    hostname: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=stockapp
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - stockapp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    hostname: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - stockapp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Frontend Application
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: frontend
+    hostname: frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_WS_URL=ws://localhost:8000
+    volumes:
+      - ./frontend:/app
+    networks:
+      - stockapp-network
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# Networks
+networks:
+  stockapp-network:
+    driver: bridge
+    name: stockapp-network
+
+# Volumes
+volumes:
+  postgres-data:
+    driver: local
+    name: stockapp-postgres-data
+  redis-data:
+    driver: local
+    name: stockapp-redis-data
