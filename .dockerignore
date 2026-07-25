@@ -61,21 +61,21 @@ htmlcov/
 
 # Docker
 .dockerignore
-Dockerfile*
-docker-compose*
+Dockerfile
+docker-compose*.yml
 
 # Local configuration
 .env
 .env.*
 !.env.example
 
-# Frontend build
+# Frontend build (will be built in Docker)
 .next/
 out/
 
-# Documentation
-docs/
-*.md
+# Documentation (keep markdown files for reference)
+# docs/
+# *.md
 
-# Shared libs (will be copied via COPY in Dockerfile)
-shared-libs/
+# Keep shared-libs as it's needed for building
+# shared-libs/
